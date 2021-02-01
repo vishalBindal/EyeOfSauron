@@ -1,6 +1,5 @@
 # Eye of Sauron
 ## How to run
-### Installing prerequisites
 - Installing CMake, Boost, Boost.Python, and X11. (These are prerequisites for dlib)
   - **Ubuntu:**
     ```bash
