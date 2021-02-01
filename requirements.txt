@@ -1,0 +1,8 @@
+numpy==1.19.4
+scipy @ file:///opt/concourse/worker/volumes/live/01799c8f-3d00-4c6b-5be2-f58e344bd56a/volume/scipy_1597719773996/work
+scikit-image==0.17.2
+dlib==19.21.1
+opencv-contrib-python==3.4.2.16
+imutils==0.5.4
+playsound==1.2.2
+pyobjc==7.1
