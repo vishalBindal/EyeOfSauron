@@ -17,10 +17,9 @@
 
 - Using Conda/Miniconda to create a python 3.6 environment
   Python 3.6 is required for an old OpenCV version that we are using in the current project. Also, it is a good practice in python to make virtual environments for each project.
-  - Set up a conda environment running python3.6
-    ```bash
-    conda create --name newenv python=3.6
-    conda activate newenv
+  ```bash
+  conda create --name newenv python=3.6
+  conda activate newenv
 
 - Install required python libs
   - Now, `$ pip install requirements.txt`
