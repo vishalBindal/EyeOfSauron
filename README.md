@@ -21,11 +21,6 @@
     ```bash
     conda create --name newenv python=3.6
     conda activate newenv
-    ```
-  - Install opencv-contrib-python==3.4.2.16 using pip
-    ```bash
-    pip install opencv-contrib-python==3.4.2.16
-    ```
 
 - Install required python libs
   - Now, `$ pip install requirements.txt`
