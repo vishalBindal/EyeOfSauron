@@ -4,5 +4,5 @@ scikit-image==0.17.2
 dlib==19.21.1
 opencv-contrib-python==3.4.2.16
 imutils==0.5.4
-playsound==1.2.2
+pydub==0.24.1
 pyobjc==7.1
