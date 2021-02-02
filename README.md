@@ -46,7 +46,7 @@
     $ pip install pyobjc # if using macOS
     ```
 
-- Running eye_detect.py
+- Running main.py
   ``` bash
-  $ python eye_detect.py --shape-predictor shape_predictor_68_face_landmarks.dat --alarm alarm.wav
+  $ python main.py
   ```
