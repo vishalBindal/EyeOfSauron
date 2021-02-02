@@ -1,11 +1,12 @@
 from tkinter import *
 from tkinter.ttk import *
-from playsound import playsound
+from pydub import AudioSegment, playback
 import os
-import multiprocessing
 
 def play_alarm(file_path):
-    playsound(file_path)
+    sound = AudioSegment.from_mp3(file_path)
+    sound_chunk = playback.make_chunks(sound, 3000)[0]
+    playback.play(sound_chunk)
 
 class settingsGui:
     def __init__(self):
@@ -108,23 +109,13 @@ class settingsGui:
         print(self.light_state.get())
 
     def playcallback(self):
-            # global play_process, listbox
-            if self.play_process is None:
-                selection = self.listbox.curselection()
-                if selection:
-                    i = selection[0]
-                    f = self.file_names[i] + '.' + self.file_extensions[i]
-                    file_path = os.path.join(self.alarms_dir, f)
-                    print(file_path)
-                    p = multiprocessing.Process(target=play_alarm, args=(file_path,))
-                    p.daemon = True
-                    p.start()
-                    self.play_process = p
-                    self.btn_play.configure(text='Stop playback')
-            else:
-                self.play_process.terminate()
-                self.play_process = None
-                self.btn_play.configure(text='Play selected sound')
+            selection = self.listbox.curselection()
+            if selection:
+                i = selection[0]
+                f = self.file_names[i] + '.' + self.file_extensions[i]
+                file_path = os.path.join(self.alarms_dir, f)
+                print(file_path)
+                play_alarm(file_path)
 
 
     def selectalarm(self):
@@ -133,7 +124,6 @@ class settingsGui:
         if selection:
             i = selection[0]
             f = self.file_names[i]
-            # global alarm_header
             self.alarm_header.configure(text='Current alarm sound: ' + f)
             print('Alarm tone set to:', f)
 

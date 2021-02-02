@@ -10,11 +10,14 @@ import imutils
 import time
 import dlib
 import cv2
+from pydub import AudioSegment, playback
 
 
 def sound_alarm(path):
     # play an alarm sound
-    playsound.playsound(path)
+    # playsound.playsound(path)
+    sound = AudioSegment.from_mp3(path)
+    playback.play(sound)
 
 
 def eye_aspect_ratio(eye):

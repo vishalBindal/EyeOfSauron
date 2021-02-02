@@ -14,6 +14,17 @@
     $ brew install boost-python3
     ```
 
+- Installing ffmpeg, libav (prerequisites for pydub)
+  - **Ubuntu**
+    ```bash
+    $ sudo apt-get install ffmpeg libavcodec-extra
+    ```
+  - **macOS**
+    ```bash
+    $ brew install ffmpeg
+    $ brew install libav
+    ```
+
 - Using Conda/Miniconda to create a python 3.6 environment
   Python 3.6 is required for an old OpenCV version that we are using in the current project. Also, it is a good practice in python to make virtual environments for each project.
   ```bash
@@ -31,8 +42,8 @@
     $ pip install dlib
     $ pip install opencv-contrib-python==3.4.2.16
     $ pip install imutils
-    $ pip install playsound
-    $ pip install pyobjc
+    $ pip install pydub
+    $ pip install pyobjc # if using macOS
     ```
 
 - Running eye_detect.py
