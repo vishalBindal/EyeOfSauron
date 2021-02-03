@@ -78,8 +78,10 @@ def main():
     # initialize the frame counter as well as a boolean used to
     # indicate if the alarm is going off
     COUNTER = 0
-    NOT_BLINK_COUNTER = 0
     ALARM_ON = False
+
+    NOT_BLINK_COUNTER = 0
+    ALARM_BLINK = False
 
     NIGHT_BRIGHTNESS_THRES = 120
     ALARM_DARK_MODE = False
@@ -182,9 +184,19 @@ def main():
                 # threshold, and if so, increment the blink frame counter
                 if ear < EYE_BLINK_THRESH:
                     NOT_BLINK_COUNTER = 0
+                    ALARM_BLINK = False
                 else:
                     NOT_BLINK_COUNTER += 1
                     if NOT_BLINK_COUNTER > BLINK_THRESH:
+                        if not ALARM_BLINK:
+                            ALARM_BLINK = True
+                            # start a thread to have the alarm
+                            # sound played in the background
+                            alarm_path = os.path.join('alarms', settings['alarm_file'])
+                            t = Thread(target=play_alarm,
+                                       args=(alarm_path, 3))
+                            t.deamon = True
+                            t.start()
                         cv2.putText(frame, "BLINK ALERT!", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
             if settings['drowsy']:
