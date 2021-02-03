@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter.ttk import *
 from pydub import AudioSegment, playback
 import os
-from config import settings
+from config import settings,state
 
 def play_alarm(file_path):
     file_type = file_path.split('.')[-1]
@@ -58,14 +58,15 @@ class settingsGui:
         self.chk_light = Checkbutton(self.gen_tab, text='Advise user regarding lighting conditions', var=self.light_state, padding=5, command=self.ftr_light_callback)
         self.chk_light.grid(row=4, column=0, sticky='w')
 
-        frame = Frame(self.gen_tab)
-        frame.grid(row=5, column=0, sticky='w')
-        self.time_lbl = Label(frame, text="Notification time before alarm (in seconds)", padding=5)
-        self.time_lbl.grid(row=0, column=0, sticky='w')
-        self.time_var = IntVar()
-        self.time_var.set(settings['time_warn'])
-        self.spin = Spinbox(frame, from_=0, to=100, width=5, textvariable=self.time_var, command=self.time_val_change)
-        self.spin.grid(row=0, column=1, sticky='w')
+        self.status_drowsiness = Label(self.gen_tab, text='Status "drowsiness": '+str(state['drowsiness']), padding=5)
+        self.status_drowsiness.grid(row=5,column=0,sticky='w')
+        self.status_away = Label(self.gen_tab, text='Status "away": '+str(state['away']), padding=5)
+        self.status_away.grid(row=6,column=0,sticky='w')
+        self.blink_required = Label(self.gen_tab, text='Status "stare": '+str(state['blink_required']), padding=5)
+        self.blink_required.grid(row=7,column=0,sticky='w')
+        self.night_mode = Label(self.gen_tab, text='Status "night dark mode required": '+str(state['night_dark_mode']), padding=5)
+        self.night_mode.grid(row=8,column=0,sticky='w')
+        self.update_vals()
 
         # -- Setting up alarm tab --
         self.alarm_tab.rowconfigure([0,2,3], weight=1, minsize=30)
@@ -102,6 +103,13 @@ class settingsGui:
         self.btn_play.grid(column=0, row=2, sticky='nsew')
         self.btn_select.grid(column=0, row=3, sticky='nsew')
     
+    def update_vals(self):
+        self.status_drowsiness.configure(text='Status "drowsiness": '+str(state['drowsiness']))
+        self.status_away.configure(text='Status "away": '+str(state['away']))
+        self.blink_required.configure(text='Status "blink required": '+str(state['blink_required']))
+        self.night_mode.configure(text='Status "night dark mode required": '+str(state['night_dark_mode']))
+        self.window.after(10, self.update_vals)
+
     def run(self):
         self.window.mainloop()
 
