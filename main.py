@@ -13,6 +13,6 @@ set_gui.run()
 
 # save settings
 file = open('config.py', 'w')
-file.write('state = {"drowsiness": False, "blink_required": False, "night_dark_mode": False}\nsettings=')
+file.write('state = {"drowsiness": False, "blink_required": False, "night_dark_mode": False, "away": False}\nsettings=')
 file.write(str(settings))
 file.close()
