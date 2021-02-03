@@ -119,19 +119,20 @@ def main():
         # detect faces in the grayscale frame
         rects = detector(gray, 0)
 
-        cv2.putText(frame, "Brightness: " + str(round(avg_brightness, 2)), (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-        if (not utilities.dark_mode_on()) and avg_brightness < NIGHT_BRIGHTNESS_THRES:
-            state["night_dark_mode"] = True
-            if not ALARM_DARK_MODE:
-                ALARM_DARK_MODE = True
-                alarm_path = os.path.join('alarms', settings['alarm_file'])
-                t = Thread(target=play_alarm,
-                           args=(alarm_path, 4))
-                t.deamon = True
-                t.start()
-        else:
-            state["night_dark_mode"] = False
-            ALARM_DARK_MODE = False
+        if settings["light"]:
+            cv2.putText(frame, "Brightness: " + str(round(avg_brightness, 2)), (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+            if (not utilities.dark_mode_on()) and avg_brightness < NIGHT_BRIGHTNESS_THRES:
+                state["night_dark_mode"] = True
+                if not ALARM_DARK_MODE:
+                    ALARM_DARK_MODE = True
+                    alarm_path = os.path.join('alarms', settings['alarm_file'])
+                    t = Thread(target=play_alarm,
+                               args=(alarm_path, 4))
+                    t.deamon = True
+                    t.start()
+            else:
+                state["night_dark_mode"] = False
+                ALARM_DARK_MODE = False
 
 
 
