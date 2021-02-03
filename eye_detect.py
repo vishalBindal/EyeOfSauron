@@ -83,8 +83,9 @@ def main():
     NOT_BLINK_COUNTER = 0
     ALARM_BLINK = False
 
-    NIGHT_BRIGHTNESS_THRES = 120
     ALARM_DARK_MODE = False
+    NIGHT_COUNTER = 0
+    NIGHT_COUNTER_THRES = 50
 
     AWAY_THRES = 200
     AWAY_COUNTER = 200
@@ -114,34 +115,38 @@ def main():
         frame = vs.read()
         frame = imutils.resize(frame, width=450)
         avg_brightness = get_avg_brightness(frame)
+        state["brightness"] = avg_brightness
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # detect faces in the grayscale frame
         rects = detector(gray, 0)
 
-        if settings["light"]:
-            cv2.putText(frame, "Brightness: " + str(round(avg_brightness, 2)), (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-            if (not utilities.dark_mode_on()) and avg_brightness < NIGHT_BRIGHTNESS_THRES:
-                state["night_dark_mode"] = True
-                if not ALARM_DARK_MODE:
-                    ALARM_DARK_MODE = True
-                    alarm_path = os.path.join('alarms', settings['alarm_file'])
-                    t = Thread(target=play_alarm,
-                               args=(alarm_path, 4))
-                    t.deamon = True
-                    t.start()
-            else:
-                state["night_dark_mode"] = False
-                ALARM_DARK_MODE = False
+        cv2.putText(frame, "Brightness: " + str(round(avg_brightness, 2)), (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+        if (not utilities.dark_mode_on()) and avg_brightness < state["brightness_threshold"]:
+            state["night_dark_mode"] = True
+            NIGHT_COUNTER += 1
+            if NIGHT_COUNTER > NIGHT_COUNTER_THRES:
+                if settings["light"]:
+                    if not ALARM_DARK_MODE:
+                        ALARM_DARK_MODE = True
+                        alarm_path = os.path.join('alarms', settings['alarm_file'])
+                        t = Thread(target=play_alarm,
+                                   args=(alarm_path, 4))
+                        t.deamon = True
+                        t.start()
+        else:
+            state["night_dark_mode"] = False
+            ALARM_DARK_MODE = False
+            NIGHT_COUNTER = 0
 
 
 
-        if settings['away']:
-            if len(rects) == 0:
-                AWAY_COUNTER += 1
-                if AWAY_COUNTER >= AWAY_THRES:
-                    state["away"] = True
-                    # if the alarm is not on, turn it on
+        if len(rects) == 0:
+            AWAY_COUNTER += 1
+            if AWAY_COUNTER >= AWAY_THRES:
+                state["away"] = True
+                # if the alarm is not on, turn it on
+                if settings['away']:
                     if not ALARM_AWAY:
                         ALARM_AWAY = True
                         # start a thread to have the alarm
@@ -151,12 +156,12 @@ def main():
                                    args=(alarm_path, 2))
                         t.deamon = True
                         t.start()
-                    cv2.putText(frame, "ARE YOU THERE!", (280, 30),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-            else:
-                AWAY_COUNTER = 0
-                ALARM_AWAY = False
-                state["away"] = False
+                cv2.putText(frame, "ARE YOU THERE!", (280, 30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        else:
+            AWAY_COUNTER = 0
+            ALARM_AWAY = False
+            state["away"] = False
 
         # loop over the face detections
         for rect in rects:
@@ -182,17 +187,18 @@ def main():
             cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
             cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
 
-            if settings['stare']:
-                # check to see if the eye aspect ratio is below the blink
-                # threshold, and if so, increment the blink frame counter
-                if ear < EYE_BLINK_THRESH:
-                    NOT_BLINK_COUNTER = 0
-                    ALARM_BLINK = False
-                    state["blink_required"] = False
-                else:
-                    NOT_BLINK_COUNTER += 1
-                    if NOT_BLINK_COUNTER > BLINK_THRESH:
-                        state["blink_required"] = True
+
+            # check to see if the eye aspect ratio is below the blink
+            # threshold, and if so, increment the blink frame counter
+            if ear < EYE_BLINK_THRESH:
+                NOT_BLINK_COUNTER = 0
+                ALARM_BLINK = False
+                state["blink_required"] = False
+            else:
+                NOT_BLINK_COUNTER += 1
+                if NOT_BLINK_COUNTER > BLINK_THRESH:
+                    state["blink_required"] = True
+                    if settings['stare']:
                         if not ALARM_BLINK:
                             ALARM_BLINK = True
                             # start a thread to have the alarm
@@ -202,15 +208,16 @@ def main():
                                        args=(alarm_path, 3))
                             t.deamon = True
                             t.start()
-                        cv2.putText(frame, "BLINK ALERT!", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                    cv2.putText(frame, "BLINK ALERT!", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-            if settings['drowsy']:
-                if ear_ratio < EYE_AR_THRESH:
-                    COUNTER += 1
-                    # if the eyes were closed for a sufficient number of
-                    # then sound the alarm
-                    if COUNTER >= EYE_AR_CONSEC_FRAMES:
-                        state["drowsiness"] = True
+
+            if ear_ratio < EYE_AR_THRESH:
+                COUNTER += 1
+                # if the eyes were closed for a sufficient number of
+                # then sound the alarm
+                if COUNTER >= EYE_AR_CONSEC_FRAMES:
+                    state["drowsiness"] = True
+                    if settings['drowsy']:
                         # if the alarm is not on, turn it on
                         if not ALARM_ON:
                             ALARM_ON = True
@@ -221,15 +228,15 @@ def main():
                                        args=(alarm_path, 1))
                             t.deamon = True
                             t.start()
-                        # draw an alarm on the frame
-                        cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                # otherwise, the eye aspect ratio is not below the blink
-                # threshold, so reset the counter and alarm
-                else:
-                    COUNTER = 0
-                    ALARM_ON = False
-                    state["drowsiness"] = False
+                    # draw an alarm on the frame
+                    cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            # otherwise, the eye aspect ratio is not below the blink
+            # threshold, so reset the counter and alarm
+            else:
+                COUNTER = 0
+                ALARM_ON = False
+                state["drowsiness"] = False
 
             # draw the computed eye aspect ratio on the frame to help
             # with debugging and setting the correct eye aspect ratio
@@ -251,3 +258,5 @@ def main():
     # do a bit of cleanup
     cv2.destroyAllWindows()
     vs.stop()
+
+main()
