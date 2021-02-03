@@ -14,15 +14,16 @@
     $ brew install boost-python3
     ```
 
-- Installing ffmpeg, libav (prerequisites for pydub)
+- Installing ffmpeg and libav or pyaudio (prerequisites for pydub)  
+  ffmpeg is only used if pyaudio is not installed. 
   - **Ubuntu**
     ```bash
     $ sudo apt-get install ffmpeg libavcodec-extra
     ```
-  - **macOS**
+  - **macOS** ffmpeg didn't work for me in mac. So, I used pyaudio.
     ```bash
-    $ brew install ffmpeg
-    $ brew install libav
+    $ brew install portaudio
+    $ pip install --global-option='build_ext' --global-option='-I/usr/local/include' --global-option='-L/usr/local/lib' pyaudio
     ```
 
 - Using Conda/Miniconda to create a python 3.6 environment

@@ -14,12 +14,15 @@ from time import sleep
 
 # Import config settings
 from config import settings
+from config import state
+
 
 def play_alarm(file_path):
     file_type = file_path.split('.')[-1]
     sound = AudioSegment.from_file(file_path, file_type)
     sound_chunk = playback.make_chunks(sound, 3000)[0]
     playback.play(sound_chunk)
+
 
 def eye_aspect_ratio(eye):
     # compute the euclidean distances between the two sets of
@@ -34,6 +37,21 @@ def eye_aspect_ratio(eye):
     # return the eye aspect ratio
     return ear
 
+
+def get_avg_brightness(rgb_image):
+    # Convert image to HSV
+    hsv = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2HSV)
+
+    # Add up all the pixel values in the V channel
+    sum_brightness = np.sum(hsv[:, :, 2])
+    area = hsv.shape[0] * hsv.shape[0]  # pixels
+
+    # find the avg
+    avg = sum_brightness / area
+
+    return avg
+
+
 def main():
     shape_predictor = 'shape_predictor_68_face_landmarks.dat'
     webcam = 0
@@ -46,6 +64,7 @@ def main():
     ALPHA = 0.5
     EYE_BLINK_THRESH = 0.25
     BLINK_THRESH = 150
+    NIGHT_BRIGHTNESS_THRES = 120
     ear_ratio = 0.4
 
     # initialize the frame counter as well as a boolean used to
@@ -64,7 +83,6 @@ def main():
     (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
     (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
-
     # start the video stream thread
     print("[INFO] starting video stream thread...")
     vs = VideoStream(webcam).start()
@@ -77,6 +95,7 @@ def main():
         # channels)
         frame = vs.read()
         frame = imutils.resize(frame, width=450)
+        avg_brightness = get_avg_brightness(frame)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # detect faces in the grayscale frame
@@ -84,6 +103,12 @@ def main():
 
         # loop over the face detections
         for rect in rects:
+            cv2.putText(frame, "Brightness: " + str(round(avg_brightness, 2)), (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+            if avg_brightness < NIGHT_BRIGHTNESS_THRES:
+                state["night_dark_mode"] = True
+            else:
+                state["night_dark_mode"] = False
+
             # determine the facial landmarks for the face region, then
             # convert the facial landmark (x, y)-coordinates to a NumPy
             # array
@@ -110,16 +135,19 @@ def main():
             # threshold, and if so, increment the blink frame counter
             if ear < EYE_BLINK_THRESH:
                 NOT_BLINK_COUNTER = 0
+                state["blink_required"] = False
             else:
                 NOT_BLINK_COUNTER += 1
                 if NOT_BLINK_COUNTER > BLINK_THRESH:
-                    cv2.putText(frame, "BLINK ALERT!", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                    state["blink_required"] = True
+                    cv2.putText(frame, "BLINK ALERT!", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
             if ear_ratio < EYE_AR_THRESH:
                 COUNTER += 1
                 # if the eyes were closed for a sufficient number of
                 # then sound the alarm
                 if COUNTER >= EYE_AR_CONSEC_FRAMES:
+                    state["drowsiness"] = True
                     # if the alarm is not on, turn it on
                     if not ALARM_ON:
                         ALARM_ON = True
@@ -127,23 +155,24 @@ def main():
                         # sound played in the background
                         alarm_path = os.path.join('alarms', settings['alarm_file'])
                         t = Thread(target=play_alarm,
-                                    args=(alarm_path,))
+                                   args=(alarm_path,))
                         t.deamon = True
                         t.start()
                     # draw an alarm on the frame
                     cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
             # otherwise, the eye aspect ratio is not below the blink
             # threshold, so reset the counter and alarm
             else:
+                state["drowsiness"] = False
                 COUNTER = 0
                 ALARM_ON = False
 
             # draw the computed eye aspect ratio on the frame to help
             # with debugging and setting the correct eye aspect ratio
             # thresholds and frame counters
-            cv2.putText(frame, "E.A.R.: {:.2f}".format(ear_ratio), (300, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            cv2.putText(frame, "E.A.R.: {:.2f}".format(ear_ratio), (330, 220),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 0, 255), 1)
 
         # show the frame
         if settings['display_frames']:
@@ -151,8 +180,8 @@ def main():
             key = cv2.waitKey(1) & 0xFF
 
             # if the `q` key was pressed, break from the loop
-            # if key == ord("q"):
-            #     break
+            if key == ord("q"):
+                break
         else:
             cv2.destroyAllWindows()
             sleep(0.001)
