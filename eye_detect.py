@@ -15,12 +15,18 @@ from time import sleep
 # Import config settings
 from config import settings
 
-def play_alarm(file_path):
-    file_type = file_path.split('.')[-1]
-    sound = AudioSegment.from_file(file_path, file_type)
-    sound_chunk = playback.make_chunks(sound, 3000)[0]
-    playback.play(sound_chunk)
+# Import notify_user
+from notify import notify_user
 
+def play_alarm(file_path):
+    if not notify_user(1):
+        file_type = file_path.split('.')[-1]
+        sound = AudioSegment.from_file(file_path, file_type)
+        sound_chunk = playback.make_chunks(sound, 3000)[0]
+        playback.play(sound_chunk)
+    else:
+        print('Alarm cancelled!')
+        
 def eye_aspect_ratio(eye):
     # compute the euclidean distances between the two sets of
     # vertical eye landmarks (x, y)-coordinates

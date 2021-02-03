@@ -1,1 +1,1 @@
-settings={'drowsy': True, 'away': False, 'stare': False, 'light': False, 'time_warn': 10, 'alarm_file': 'alarm_beeps.mp3', 'display_frames': False}
+settings={'drowsy': True, 'away': False, 'stare': False, 'light': False, 'time_warn': 10, 'alarm_file': 'alarm_beeps.mp3', 'display_frames': True}

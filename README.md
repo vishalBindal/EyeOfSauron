@@ -46,6 +46,12 @@
     $ pip install pyobjc # if using macOS
     ```
 
+- Install dependencies for creating notifications
+  - **Ubuntu**
+    ```bash
+    $ pip install notify-send.py
+    ```
+
 - Running main.py
   ``` bash
   $ python main.py
