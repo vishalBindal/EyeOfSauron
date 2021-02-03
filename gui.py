@@ -60,7 +60,7 @@ class settingsGui:
 
         brightness_frame = Frame(self.gen_tab)	   
         brightness_frame.grid(row=5, column=0, sticky='w')
-        self.value_lbl = Label(brightness_frame, text="Healthy brightness reading threshold: ", padding=5)
+        self.value_lbl = Label(brightness_frame, text="Healthy brightness reading threshold for light mode: ", padding=5)
         self.value_lbl.grid(row=0, column=0, sticky='w')	      
         self.value_var = IntVar()	       
         self.value_var.set(settings['brightness_threshold'])	 
@@ -75,7 +75,7 @@ class settingsGui:
         self.blink_required.grid(row=8,column=0,sticky='w')
         self.night_mode = Label(self.gen_tab, text='Status "night dark mode required": '+str(state['night_dark_mode']), padding=5)
         self.night_mode.grid(row=9,column=0,sticky='w')
-        self.bri_label = Label(self.gen_tab, text='Current brightness reading: '+str(state['brightness']), padding=5)
+        self.bri_label = Label(self.gen_tab, text='Current brightness reading: '+str(int(state['brightness'])), padding=5)
         self.bri_label.grid(row=10,column=0,sticky='w')
         self.update_vals()
 
@@ -119,7 +119,7 @@ class settingsGui:
         self.status_away.configure(text='Status "away": '+str(state['away']))
         self.blink_required.configure(text='Status "blink required": '+str(state['blink_required']))
         self.night_mode.configure(text='Status "night dark mode required": '+str(state['night_dark_mode']))
-        self.bri_label.configure(text='Current brightness reading: '+str(state['brightness']))
+        self.bri_label.configure(text='Current brightness reading: '+str(int(state['brightness'])))
         self.window.after(10, self.update_vals)
 
     def run(self):
