@@ -139,6 +139,7 @@ def main():
             if len(rects) == 0:
                 AWAY_COUNTER += 1
                 if AWAY_COUNTER >= AWAY_THRES:
+                    state["away"] = True
                     # if the alarm is not on, turn it on
                     if not ALARM_AWAY:
                         ALARM_AWAY = True
@@ -154,6 +155,7 @@ def main():
             else:
                 AWAY_COUNTER = 0
                 ALARM_AWAY = False
+                state["away"] = False
 
         # loop over the face detections
         for rect in rects:
@@ -185,9 +187,11 @@ def main():
                 if ear < EYE_BLINK_THRESH:
                     NOT_BLINK_COUNTER = 0
                     ALARM_BLINK = False
+                    state["blink_required"] = False
                 else:
                     NOT_BLINK_COUNTER += 1
                     if NOT_BLINK_COUNTER > BLINK_THRESH:
+                        state["blink_required"] = True
                         if not ALARM_BLINK:
                             ALARM_BLINK = True
                             # start a thread to have the alarm
@@ -205,6 +209,7 @@ def main():
                     # if the eyes were closed for a sufficient number of
                     # then sound the alarm
                     if COUNTER >= EYE_AR_CONSEC_FRAMES:
+                        state["drowsiness"] = True
                         # if the alarm is not on, turn it on
                         if not ALARM_ON:
                             ALARM_ON = True
@@ -223,6 +228,7 @@ def main():
                 else:
                     COUNTER = 0
                     ALARM_ON = False
+                    state["drowsiness"] = False
 
             # draw the computed eye aspect ratio on the frame to help
             # with debugging and setting the correct eye aspect ratio
