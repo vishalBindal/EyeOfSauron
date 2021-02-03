@@ -122,7 +122,7 @@ def main():
         rects = detector(gray, 0)
 
         cv2.putText(frame, "Brightness: " + str(round(avg_brightness, 2)), (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-        if (not utilities.dark_mode_on()) and avg_brightness < state["brightness_threshold"]:
+        if (not utilities.dark_mode_on()) and avg_brightness < settings["brightness_threshold"]:
             state["night_dark_mode"] = True
             NIGHT_COUNTER += 1
             if NIGHT_COUNTER > NIGHT_COUNTER_THRES:

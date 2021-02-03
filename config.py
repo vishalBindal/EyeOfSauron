@@ -1,2 +1,2 @@
-state = {"drowsiness": False, "blink_required": False, "night_dark_mode": False, "away": False, "brightness_threshold": 100, "brightness": 250}
-settings={'drowsy': True, 'away': False, 'stare': False, 'light': False, 'time_warn': 10, 'alarm_file': 'alarm_beeps.mp3', 'display_frames': True}
+state = {"drowsiness": False, "blink_required": False, "night_dark_mode": False, "away": False, "brightness": 250}
+settings={'drowsy': True, 'away': False, 'stare': False, 'light': False, 'time_warn': 10, 'alarm_file': 'alarm_beeps.mp3', 'display_frames': True, "brightness_threshold": 100}
