@@ -58,14 +58,25 @@ class settingsGui:
         self.chk_light = Checkbutton(self.gen_tab, text='Advise user regarding lighting conditions', var=self.light_state, padding=5, command=self.ftr_light_callback)
         self.chk_light.grid(row=4, column=0, sticky='w')
 
+        brightness_frame = Frame(self.gen_tab)	   
+        brightness_frame.grid(row=5, column=0, sticky='w')
+        self.value_lbl = Label(brightness_frame, text="Healthy brightness reading threshold: ", padding=5)
+        self.value_lbl.grid(row=0, column=0, sticky='w')	      
+        self.value_var = IntVar()	       
+        self.value_var.set(settings['brightness_threshold'])	 
+        self.spin = Spinbox(brightness_frame, from_=0, to=300, width=5, textvariable=self.value_var, command=self.threshold_change)	     
+        self.spin.grid(row=0, column=1, sticky='w')
+
         self.status_drowsiness = Label(self.gen_tab, text='Status "drowsiness": '+str(state['drowsiness']), padding=5)
-        self.status_drowsiness.grid(row=5,column=0,sticky='w')
+        self.status_drowsiness.grid(row=6,column=0,sticky='w')
         self.status_away = Label(self.gen_tab, text='Status "away": '+str(state['away']), padding=5)
-        self.status_away.grid(row=6,column=0,sticky='w')
+        self.status_away.grid(row=7,column=0,sticky='w')
         self.blink_required = Label(self.gen_tab, text='Status "stare": '+str(state['blink_required']), padding=5)
-        self.blink_required.grid(row=7,column=0,sticky='w')
+        self.blink_required.grid(row=8,column=0,sticky='w')
         self.night_mode = Label(self.gen_tab, text='Status "night dark mode required": '+str(state['night_dark_mode']), padding=5)
-        self.night_mode.grid(row=8,column=0,sticky='w')
+        self.night_mode.grid(row=9,column=0,sticky='w')
+        self.bri_label = Label(self.gen_tab, text='Current brightness reading: '+str(state['brightness']), padding=5)
+        self.bri_label.grid(row=10,column=0,sticky='w')
         self.update_vals()
 
         # -- Setting up alarm tab --
@@ -108,14 +119,15 @@ class settingsGui:
         self.status_away.configure(text='Status "away": '+str(state['away']))
         self.blink_required.configure(text='Status "blink required": '+str(state['blink_required']))
         self.night_mode.configure(text='Status "night dark mode required": '+str(state['night_dark_mode']))
+        self.bri_label.configure(text='Current brightness reading: '+str(state['brightness']))
         self.window.after(10, self.update_vals)
 
     def run(self):
         self.window.mainloop()
 
-    def time_val_change(self):
-        settings['time_warn'] = self.spin.get()
-        print('Warning time changed to:', settings['time_warn'])
+    def threshold_change(self):
+        settings['brightness_threshold'] = self.spin.get()
+        print('Brightness threshold changed to:', settings['brightness_threshold'])
 
     def display_callback(self):
         settings['display_frames'] = self.display_state.get()
