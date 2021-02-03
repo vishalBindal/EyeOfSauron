@@ -10,4 +10,4 @@ def dark_mode_on():
                              stderr=subprocess.PIPE, shell=True)
         return bool(p.communicate()[0])
     else:
-        return True
+        return False
