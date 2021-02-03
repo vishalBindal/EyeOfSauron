@@ -21,8 +21,8 @@ from notify import notify_user
 
 
 def play_alarm(file_path, flag):
-    if flag == 1:
-        if not notify_user(1):
+    if flag == 1 or flag == 2:
+        if not notify_user(flag):
             file_type = file_path.split('.')[-1]
             sound = AudioSegment.from_file(file_path, file_type)
             sound_chunk = playback.make_chunks(sound, 3000)[0]
@@ -84,6 +84,11 @@ def main():
     NIGHT_BRIGHTNESS_THRES = 120
     ALARM_DARK_MODE = False
 
+    AWAY_THRES = 200
+    AWAY_COUNTER = 200
+    ALARM_AWAY = False
+
+
     # initialize dlib's face detector (HOG-based) and then create
     # the facial landmark predictor
     print("[INFO] loading facial landmark predictor...")
@@ -126,6 +131,28 @@ def main():
             state["night_dark_mode"] = False
             ALARM_DARK_MODE = False
 
+
+
+        if settings['away']:
+            if len(rects) == 0:
+                AWAY_COUNTER += 1
+                if AWAY_COUNTER >= AWAY_THRES:
+                    # if the alarm is not on, turn it on
+                    if not ALARM_AWAY:
+                        ALARM_AWAY = True
+                        # start a thread to have the alarm
+                        # sound played in the background
+                        alarm_path = os.path.join('alarms', settings['alarm_file'])
+                        t = Thread(target=play_alarm,
+                                   args=(alarm_path, 2))
+                        t.deamon = True
+                        t.start()
+                    cv2.putText(frame, "ARE YOU THERE!", (280, 30),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            else:
+                AWAY_COUNTER = 0
+                ALARM_AWAY = False
+
         # loop over the face detections
         for rect in rects:
             # determine the facial landmarks for the face region, then
@@ -150,38 +177,40 @@ def main():
             cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
             cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
 
-            # check to see if the eye aspect ratio is below the blink
-            # threshold, and if so, increment the blink frame counter
-            if ear < EYE_BLINK_THRESH:
-                NOT_BLINK_COUNTER = 0
-            else:
-                NOT_BLINK_COUNTER += 1
-                if NOT_BLINK_COUNTER > BLINK_THRESH:
-                    cv2.putText(frame, "BLINK ALERT!", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            if settings['stare']:
+                # check to see if the eye aspect ratio is below the blink
+                # threshold, and if so, increment the blink frame counter
+                if ear < EYE_BLINK_THRESH:
+                    NOT_BLINK_COUNTER = 0
+                else:
+                    NOT_BLINK_COUNTER += 1
+                    if NOT_BLINK_COUNTER > BLINK_THRESH:
+                        cv2.putText(frame, "BLINK ALERT!", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-            if ear_ratio < EYE_AR_THRESH:
-                COUNTER += 1
-                # if the eyes were closed for a sufficient number of
-                # then sound the alarm
-                if COUNTER >= EYE_AR_CONSEC_FRAMES:
-                    # if the alarm is not on, turn it on
-                    if not ALARM_ON:
-                        ALARM_ON = True
-                        # start a thread to have the alarm
-                        # sound played in the background
-                        alarm_path = os.path.join('alarms', settings['alarm_file'])
-                        t = Thread(target=play_alarm,
-                                   args=(alarm_path, 1))
-                        t.deamon = True
-                        t.start()
-                    # draw an alarm on the frame
-                    cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-            # otherwise, the eye aspect ratio is not below the blink
-            # threshold, so reset the counter and alarm
-            else:
-                COUNTER = 0
-                ALARM_ON = False
+            if settings['drowsy']:
+                if ear_ratio < EYE_AR_THRESH:
+                    COUNTER += 1
+                    # if the eyes were closed for a sufficient number of
+                    # then sound the alarm
+                    if COUNTER >= EYE_AR_CONSEC_FRAMES:
+                        # if the alarm is not on, turn it on
+                        if not ALARM_ON:
+                            ALARM_ON = True
+                            # start a thread to have the alarm
+                            # sound played in the background
+                            alarm_path = os.path.join('alarms', settings['alarm_file'])
+                            t = Thread(target=play_alarm,
+                                       args=(alarm_path, 1))
+                            t.deamon = True
+                            t.start()
+                        # draw an alarm on the frame
+                        cv2.putText(frame, "DROWSINESS ALERT!", (10, 30),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                # otherwise, the eye aspect ratio is not below the blink
+                # threshold, so reset the counter and alarm
+                else:
+                    COUNTER = 0
+                    ALARM_ON = False
 
             # draw the computed eye aspect ratio on the frame to help
             # with debugging and setting the correct eye aspect ratio
