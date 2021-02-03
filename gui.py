@@ -126,7 +126,7 @@ class settingsGui:
         self.window.mainloop()
 
     def threshold_change(self):
-        settings['brightness_threshold'] = self.spin.get()
+        settings['brightness_threshold'] = int(self.spin.get())
         print('Brightness threshold changed to:', settings['brightness_threshold'])
 
     def display_callback(self):

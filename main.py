@@ -12,9 +12,10 @@ set_gui = settingsGui()
 set_gui.run()
 
 # save settings
+state['brightness'] = int(state['brightness'])
 file = open('config.py', 'w')
 file.write('state=')
 file.write(str(state))
-print('\nsettings=')
+file.write('\nsettings=')
 file.write(str(settings))
 file.close()
