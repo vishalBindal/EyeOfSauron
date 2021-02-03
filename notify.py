@@ -22,7 +22,7 @@ def notify_user(use_case):
     elif use_case == 3:
         message = 'You are staring at the screen far too long. You are advised to take a break.'
     elif use_case == 4:
-        message = 'It seems you are working in unhealthy lighting conditions. You are advised to turn on night mode/dark mode.'
+        message = 'It seems you are working in unhealthy lighting conditions and we detected that dark mode is not on. You are advised to turn on night mode/dark mode.'
 
     if platform.system() == 'Linux':
         cmd = ['notify-send.py', heading, message, '-i', icon_path]

@@ -1,1 +1,2 @@
+state = {"drowsiness": False, "blink_required": False, "night_dark_mode": False}
 settings={'drowsy': True, 'away': False, 'stare': False, 'light': False, 'time_warn': 10, 'alarm_file': 'alarm_beeps.mp3', 'display_frames': True}

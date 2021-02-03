@@ -11,22 +11,28 @@ import dlib
 import cv2
 from pydub import AudioSegment, playback
 from time import sleep
+import utilities
 
-# Import config settings
-from config import settings
+# Import config settings and state
+from config import settings, state
 
 # Import notify_user
 from notify import notify_user
 
-def play_alarm(file_path):
-    if not notify_user(1):
-        file_type = file_path.split('.')[-1]
-        sound = AudioSegment.from_file(file_path, file_type)
-        sound_chunk = playback.make_chunks(sound, 3000)[0]
-        playback.play(sound_chunk)
+
+def play_alarm(file_path, flag):
+    if flag == 1:
+        if not notify_user(1):
+            file_type = file_path.split('.')[-1]
+            sound = AudioSegment.from_file(file_path, file_type)
+            sound_chunk = playback.make_chunks(sound, 3000)[0]
+            playback.play(sound_chunk)
+        else:
+            print('Alarm cancelled!')
     else:
-        print('Alarm cancelled!')
-        
+        notify_user(flag)
+
+
 def eye_aspect_ratio(eye):
     # compute the euclidean distances between the two sets of
     # vertical eye landmarks (x, y)-coordinates
@@ -39,6 +45,21 @@ def eye_aspect_ratio(eye):
     ear = (A + B) / (2.0 * C)
     # return the eye aspect ratio
     return ear
+
+
+def get_avg_brightness(rgb_image):
+    # Convert image to HSV
+    hsv = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2HSV)
+
+    # Add up all the pixel values in the V channel
+    sum_brightness = np.sum(hsv[:, :, 2])
+    area = hsv.shape[0] * hsv.shape[0]  # pixels
+
+    # find the avg
+    avg = sum_brightness / area
+
+    return avg
+
 
 def main():
     shape_predictor = 'shape_predictor_68_face_landmarks.dat'
@@ -60,6 +81,9 @@ def main():
     NOT_BLINK_COUNTER = 0
     ALARM_ON = False
 
+    NIGHT_BRIGHTNESS_THRES = 120
+    ALARM_DARK_MODE = False
+
     # initialize dlib's face detector (HOG-based) and then create
     # the facial landmark predictor
     print("[INFO] loading facial landmark predictor...")
@@ -69,7 +93,6 @@ def main():
     # right eye, respectively
     (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
     (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
-
 
     # start the video stream thread
     print("[INFO] starting video stream thread...")
@@ -83,10 +106,25 @@ def main():
         # channels)
         frame = vs.read()
         frame = imutils.resize(frame, width=450)
+        avg_brightness = get_avg_brightness(frame)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # detect faces in the grayscale frame
         rects = detector(gray, 0)
+
+        cv2.putText(frame, "Brightness: " + str(round(avg_brightness, 2)), (10, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+        if (not utilities.dark_mode_on()) and avg_brightness < NIGHT_BRIGHTNESS_THRES:
+            state["night_dark_mode"] = True
+            if not ALARM_DARK_MODE:
+                ALARM_DARK_MODE = True
+                alarm_path = os.path.join('alarms', settings['alarm_file'])
+                t = Thread(target=play_alarm,
+                           args=(alarm_path, 4))
+                t.deamon = True
+                t.start()
+        else:
+            state["night_dark_mode"] = False
+            ALARM_DARK_MODE = False
 
         # loop over the face detections
         for rect in rects:
@@ -133,7 +171,7 @@ def main():
                         # sound played in the background
                         alarm_path = os.path.join('alarms', settings['alarm_file'])
                         t = Thread(target=play_alarm,
-                                    args=(alarm_path,))
+                                   args=(alarm_path, 1))
                         t.deamon = True
                         t.start()
                     # draw an alarm on the frame
