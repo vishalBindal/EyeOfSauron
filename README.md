@@ -46,6 +46,10 @@
     $ pip install pydub
     $ pip install pyobjc # if using macOS
     ```
+  - Install notify-send.py for sending notifications in Ubuntu (not needed for macOS)
+    ```bash
+    $ pip install notify-send.py
+    ```
 
 - Running main.py
   ``` bash
